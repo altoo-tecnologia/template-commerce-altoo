@@ -2,9 +2,12 @@
 
 import { addToCart, createCart, getCart, removeFromCart, updateCart } from 'lib/shopify';
 import { cookies } from 'next/headers';
+import nookies from "nookies";
 
 export const addItem = async (variantId: string | undefined): Promise<String | undefined> => {
-  let cartId = cookies().get('cartId')?.value;
+  // let cartId = cookies().get('cartId')?.value;
+  const cookies = nookies.get();
+  let cartId = cookies['cartId'];
   let cart;
 
   if (cartId) {
@@ -14,13 +17,18 @@ export const addItem = async (variantId: string | undefined): Promise<String | u
   if (!cartId || !cart) {
     cart = await createCart();
     cartId = cart.id;
-    cookies().set('cartId', cartId);
+    console.log('console dentro do if ' + cartId);
+    nookies.set({}, 'cartId', cartId, {
+      maxAge: 60,
+      path: '/',
+    })
+    // cookies().set('cartId', cartId);
   }
 
   if (!variantId) {
     return 'Missing product variant ID';
   }
-
+  
   try {
     await addToCart(cartId, [{ merchandiseId: variantId, quantity: 1 }]);
   } catch (e) {
